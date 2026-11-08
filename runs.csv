@@ -1,3 +1,4 @@
 run_id,n_layer,n_head,n_embd,block_size,max_lr,max_steps,ablation,params,best_val_loss,final_train_loss,tokens_per_sec,wall_time_min
 baseline,0,0,0,0,0,0,none,0,0.6805,0.6805,0,0
 baseline,0,0,0,0,0,0,none,0,0.6805,0.6805,0,0
+model_M,4,4,128,128,0.0003,1000,none,936192,4.6491,4.4962,190955.7,0.36
