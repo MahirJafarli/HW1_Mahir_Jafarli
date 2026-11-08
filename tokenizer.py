@@ -6,16 +6,13 @@ class BPETokenizer:
         self.vocab: dict[int, bytes] = {}
 
     def train(self, text: str, vocab_size: int) -> None:
-        """Trains the BPE tokenizer on raw text up to the specified vocab_size."""
-        # A1: Encode text to UTF-8 bytes
+        """Trains the BPE tokenizer on raw text up to the specified vocab_size efficiently."""
         tokens = list(text.encode("utf-8"))
-        
-        # Base vocabulary of 256 byte values
         num_merges = vocab_size - 256
         self.merges = []
 
         for i in range(num_merges):
-            # Count adjacent pairs
+            # Count adjacent pairs using a dictionary
             stats = {}
             for p1, p2 in zip(tokens[:-1], tokens[1:]):
                 stats[(p1, p2)] = stats.get((p1, p2), 0) + 1
@@ -23,21 +20,17 @@ class BPETokenizer:
             if not stats:
                 break
                 
-            # A4: Tie-breaking rule: pick most frequent pair, smallest a, then smallest b
+            # Tie-breaking rule (A4): highest count, smallest a, smallest b
             best_pair = max(stats.keys(), key=lambda p: (stats[p], -p[0], -p[1]))
-            
-            # A3: New ID for the merge
             new_id = 256 + i
             
-            # Replace occurrences left to right
             tokens = self._merge_pair(tokens, best_pair, new_id)
             self.merges.append(best_pair)
 
-        # Build final decoding vocabulary mapping IDs to byte sequences
         self._build_vocab()
 
     def _merge_pair(self, ids: list[int], pair: tuple[int, int], new_id: int) -> list[int]:
-        """Replaces non-overlapping occurrences of a pair with new_id left to right."""
+        """Efficiently merges a pair across the token list."""
         new_ids = []
         i = 0
         while i < len(ids):
