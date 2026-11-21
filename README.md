@@ -1,35 +1,29 @@
-# Custom NLP Model & BPE Tokenizer from Scratch
+# Build a GPT from Scratch
 
-A lightweight transformer-based language model and custom Byte-Pair Encoding (BPE) tokenizer built and trained entirely from scratch in PyTorch and Python.
+This project implements a byte-level BPE tokenizer, a decoder-only GPT in PyTorch,
+a training pipeline, a smoothed bigram baseline, and autoregressive generation.
 
-## 📁 Project Structure
+## Setup
 
-- `model.py`: Transformer architecture definition (Multi-Head Attention, FeedForward, blocks).
-- `tokenizer.py`: Custom BPE tokenizer implementation.
-- `train.py`: Training script with loss logging and validation checkpoints.
-- `generate.py`: Text generation and inference script.
-- `configs/`: Configuration files for model hyperparameters.
-- `tokenizer.json`: Serialized tokenizer vocabulary and merges (768 merges).
-- `model_M_best.pt`: Saved model checkpoint weights.
+The training corpus is Tiny Shakespeare. Download it to `input.txt` in the project
+root before training:
 
-## ⚙️ Model Architecture (`model_M`)
+```text
+https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
+```
 
-- **Layers (`n_layer`)**: 4[cite: 11]
-- **Attention Heads (`n_head`)**: 4[cite: 11]
-- **Embedding Dimension (`n_embd`)**: 128[cite: 11]
-- **Block Size / Context Length**: 128[cite: 11]
-- **Total Parameters**: ~936,192 (~936k)[cite: 11]
+Install PyTorch, then run from the project root:
 
-## 📈 Training Performance
+```bash
+python train.py --config configs/M.json
+python bigram.py
+```
 
-Trained for 1,000 steps with a peak learning rate of $3 \times 10^{-4}$[cite: 11]:
+The training script caches token IDs under `cache/`, writes evaluation metrics to
+`logs/<run_id>.csv`, appends completed runs to `runs.csv`, and saves the best
+checkpoint under `checkpoints/`. The assignment's required 137-step warmup is
+used regardless of the config's `warmup_steps` value.
 
-* **Final Training Loss**: $4.5020$[cite: 11]
-* **Best Validation Loss**: $4.6491$[cite: 11]
-* **Throughput**: ~190,955 tokens/sec[cite: 11]
-
-## 🚀 Getting Started
-
-1. Install dependencies:
-   ```bash
-   pip install torch pandas
+For the full experiment suite, run the configs on a GPU runtime such as Google
+Colab. Dataset, cache, logs, and checkpoints are local/generated files and are
+not part of the final submission archive.

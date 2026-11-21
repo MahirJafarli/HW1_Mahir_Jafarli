@@ -1,3 +1,4 @@
+# hw1-build: caspian-7
 from dataclasses import dataclass
 import math
 import torch
@@ -13,7 +14,7 @@ class GPTConfig:
     n_embd: int = 128
     dropout: float = 0.1
 
-class CausalSelfAttention(nn.Module):
+class CausalSelfAttentionK(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
         assert config.n_embd % config.n_head == 0
@@ -36,7 +37,7 @@ class CausalSelfAttention(nn.Module):
             )
         )
 
-    def forward(self, x, kv_cache=None):
+    def forward(self, x, kv_cache=None, use_cache=False):
         B, T, C = x.size() # Batch size, sequence length, embedding dimension
 
         # Calculate Query, Key, Value for all heads in batch
@@ -53,11 +54,7 @@ class CausalSelfAttention(nn.Module):
             prev_k, prev_v = kv_cache
             k = torch.cat([prev_k, k], dim=2)
             v = torch.cat([prev_v, v], dim=2)
-            new_kv_cache = (k, v)
-        else:
-            new_kv_cache = None
-
-        K_len = k.size(2)
+        new_kv_cache = (k, v) if use_cache or kv_cache is not None else None
 
         # Compute causal attention scores: (B, H, T, K_len)
         att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(self.head_dim))
@@ -79,7 +76,7 @@ class CausalSelfAttention(nn.Module):
         # Output projection
         y = self.resid_dropout(self.c_proj(y))
         
-        if kv_cache is not None:
+        if use_cache or kv_cache is not None:
             return y, new_kv_cache
         return y
 
@@ -101,13 +98,15 @@ class Block(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
         self.ln_1 = nn.LayerNorm(config.n_embd)
-        self.attn = CausalSelfAttention(config)
+        self.attn = CausalSelfAttentionK(config)
         self.ln_2 = nn.LayerNorm(config.n_embd)
         self.mlp = MLP(config)
 
-    def forward(self, x, kv_cache=None):
-        if kv_cache is not None:
-            attn_out, new_kv_cache = self.attn(self.ln_1(x), kv_cache=kv_cache)
+    def forward(self, x, kv_cache=None, use_cache=False):
+        if use_cache or kv_cache is not None:
+            attn_out, new_kv_cache = self.attn(
+                self.ln_1(x), kv_cache=kv_cache, use_cache=use_cache
+            )
             x = x + attn_out
             x = x + self.mlp(self.ln_2(x))
             return x, new_kv_cache
@@ -170,7 +169,7 @@ class GPT(nn.Module):
 
             new_kv_caches = []
             for i, block in enumerate(self.transformer.h):
-                x, new_kv = block(x, kv_cache=kv_caches[i])
+                x, new_kv = block(x, kv_cache=kv_caches[i], use_cache=True)
                 new_kv_caches.append(new_kv)
 
         x = self.transformer.ln_f(x)

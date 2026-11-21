@@ -1,10 +1,14 @@
 # AI Disclosure Statement
 
-In accordance with course guidelines, I declare the use of AI tools (Gemini) as a collaborative technical assistant during the development of this project. 
+I used Gemini and GitHub Copilot (Copilot SDK in VS Code) as technical assistants. I reviewed the changes and will verify that I can explain the submitted code.
 
-## Scope of AI Assistance:
-- **Debugging & Architecture Guidance:** Assisted in structuring the PyTorch transformer blocks in `model.py` and implementing efficient dictionary-based pair counting in the custom BPE `tokenizer.py`.
-- **Documentation & Logging:** Helped draft the training metrics summary, `.gitignore` rules, and this `README.md` structure.
-- **Verification:** Reviewed training loop loss logs and validation curves to ensure stable convergence.
+## Assistance by part
 
-All core design decisions, code implementation, execution, and final validation were thoroughly reviewed, tested, and understood by the author.
+- **A - code generation:** Copilot helped resolve the tokenizer's tie-breaking behavior. I will check it against the tokenizer tests and review the implementation.
+- **B - code review:** Copilot identified the required attention class name and grader marker. I will verify the model architecture and parameter count.
+- **C - code generation:** Copilot helped revise the training CLI, token-ID cache, schedule, and baseline. I will run the pipeline and inspect its logs.
+- **D - code generation:** Copilot helped implement autoregressive generation with sampling filters and a KV cache. I will test cached and uncached generation and review the implementation.
+- **E - concepts:** Copilot helped organize the remaining experiment work. I will run the experiments and report the measurements from my own logs.
+- **F - concepts:** Copilot helped identify the report and disclosure requirements. I will write the final reflections using my own run results and commit history.
+
+Gemini was also used for earlier debugging, architecture guidance, and documentation assistance. I will update this disclosure if I use additional AI assistance for the experiments or report.

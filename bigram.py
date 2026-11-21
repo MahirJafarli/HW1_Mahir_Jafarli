@@ -1,71 +1,66 @@
-import os
+# hw1-build: caspian-7
 import csv
+import math
+import os
+
 from tokenizer import BPETokenizer
 
+
+RUNS_COLUMNS = [
+    "run_id", "n_layer", "n_head", "n_embd", "block_size",
+    "max_lr", "max_steps", "ablation", "params",
+    "best_val_loss", "final_train_loss", "tokens_per_sec", "wall_time_min",
+]
+
+
 def main():
-    # 1. Load and read the dataset
-    if not os.path.exists("input.txt"):
-        raise FileNotFoundError("input.txt not found. Please download it first.")
-        
-    with open("input.txt", "r", encoding="utf-8") as f:
-        text = f.read()
-
-    # 2. Split into 90% training, 10% validation (matching Section 3)
+    with open("input.txt", "r", encoding="utf-8") as dataset_file:
+        text = dataset_file.read()
     split_idx = int(0.9 * len(text))
-    train_text = text[:split_idx]
-    val_text = text[split_idx:]
+    train_text, val_text = text[:split_idx], text[split_idx:]
+    if not train_text or not val_text:
+        raise ValueError("input.txt must have non-empty training and validation splits.")
 
-    # 3. Train or load tokenizer (vocab_size = 1024)
-    print("Training BPETokenizer for baseline...")
-    tokenizer = BPETokenizer()
-    tokenizer.train(train_text, vocab_size=1024)
+    tokenizer_path = "tokenizer.json"
+    if os.path.exists(tokenizer_path):
+        tokenizer = BPETokenizer.load(tokenizer_path)
+    else:
+        tokenizer = BPETokenizer()
+        tokenizer.train(train_text, vocab_size=1024)
+        tokenizer.save(tokenizer_path)
 
     train_ids = tokenizer.encode(train_text)
     val_ids = tokenizer.encode(val_text)
+    vocab_size = len(tokenizer.vocab)
 
-    vocab_size = 1024
+    counts = [[1.0] * vocab_size for _ in range(vocab_size)]
+    row_totals = [float(vocab_size)] * vocab_size
+    for previous, current in zip(train_ids[:-1], train_ids[1:]):
+        counts[previous][current] += 1.0
+        row_totals[previous] += 1.0
 
-    # 4. Count bigram frequencies with add-one smoothing
-    # bigram_counts[w1][w2] = count
-    counts = [[1.0 * vocab_size for _ in range(vocab_size)] for _ in range(vocab_size)]
-    uni_counts = [1.0 * vocab_size for _ in range(vocab_size)]
+    val_pairs = list(zip(val_ids[:-1], val_ids[1:]))
+    if not val_pairs:
+        raise ValueError("The validation split must contain at least two tokens.")
 
-    for w1, w2 in zip(train_ids[:-1], train_ids[1:]):
-        counts[w1][w2] += 1.0
-        uni_counts[w1] += 1.0
-
-    # Convert counts to log probabilities for validation loss calculation
-    import math
-    
     total_val_loss = 0.0
-    num_tokens = len(val_ids) - 1
+    for previous, current in val_pairs:
+        probability = counts[previous][current] / row_totals[previous]
+        total_val_loss -= math.log(probability)
+    val_loss = total_val_loss / len(val_pairs)
+    print(f"Bigram baseline validation loss: {val_loss:.4f} nats per token")
 
-    for w1, w2 in zip(val_ids[:-1], val_ids[1:]):
-        # Probability with add-one smoothing
-        row_sum = uni_counts[w1]
-        prob = counts[w1][w2] / row_sum
-        total_val_loss -= math.log(prob)
-
-    val_loss = total_val_loss / num_tokens
-    print(f"Bigram Baseline Validation Loss: {val_loss:.4f} nats per token")
-
-    # 5. Append baseline result to runs.csv as required by instructions
-    os.makedirs("logs", exist_ok=True)
     runs_file = "runs.csv"
-    
-    file_exists = os.path.exists(runs_file)
-    with open(runs_file, mode="a", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow([
-                "run_id", "n_layer", "n_head", "n_embd", "block_size", 
-                "max_lr", "max_steps", "ablation", "params", 
-                "best_val_loss", "final_train_loss", "tokens_per_sec", "wall_time_min"
-            ])
-        writer.writerow([
-            "baseline", 0, 0, 0, 0, 0, 0, "none", 0, f"{val_loss:.4f}", f"{val_loss:.4f}", 0, 0
-        ])
-    print("Baseline logged to runs.csv successfully!")
+    write_header = not os.path.exists(runs_file) or os.path.getsize(runs_file) == 0
+    with open(runs_file, "a", newline="", encoding="utf-8") as output_file:
+        writer = csv.writer(output_file)
+        if write_header:
+            writer.writerow(RUNS_COLUMNS)
+        writer.writerow(
+            ["bigram", 0, 0, 0, 0, 0, 0, "none", 0,
+             f"{val_loss:.4f}", f"{val_loss:.4f}", 0, 0]
+        )
+
 
 if __name__ == "__main__":
     main()

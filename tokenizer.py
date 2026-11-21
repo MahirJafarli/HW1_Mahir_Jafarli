@@ -1,3 +1,4 @@
+# hw1-build: caspian-7
 import json
 
 class BPETokenizer:
@@ -20,8 +21,8 @@ class BPETokenizer:
             if not stats:
                 break
                 
-            # Tie-breaking rule (A4): highest count, smallest a, smallest b
-            best_pair = max(stats.keys(), key=lambda p: (stats[p], -p[0], -p[1]))
+            # Dict insertion order preserves the first occurrence in the text.
+            best_pair = max(stats, key=stats.get)
             new_id = 256 + i
             
             tokens = self._merge_pair(tokens, best_pair, new_id)
