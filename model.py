@@ -13,6 +13,8 @@ class GPTConfig:
     n_head: int = 4
     n_embd: int = 128
     dropout: float = 0.1
+    use_position_embeddings: bool = True
+    layer_norm_style: str = "pre"
 
 class CausalSelfAttentionK(nn.Module):
     def __init__(self, config: GPTConfig):
@@ -97,6 +99,9 @@ class MLP(nn.Module):
 class Block(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
+        if config.layer_norm_style not in ("pre", "post"):
+            raise ValueError("layer_norm_style must be 'pre' or 'post'.")
+        self.layer_norm_style = config.layer_norm_style
         self.ln_1 = nn.LayerNorm(config.n_embd)
         self.attn = CausalSelfAttentionK(config)
         self.ln_2 = nn.LayerNorm(config.n_embd)
@@ -104,29 +109,39 @@ class Block(nn.Module):
 
     def forward(self, x, kv_cache=None, use_cache=False):
         if use_cache or kv_cache is not None:
+            attn_input = x if self.layer_norm_style == "post" else self.ln_1(x)
             attn_out, new_kv_cache = self.attn(
-                self.ln_1(x), kv_cache=kv_cache, use_cache=use_cache
+                attn_input, kv_cache=kv_cache, use_cache=use_cache
             )
-            x = x + attn_out
-            x = x + self.mlp(self.ln_2(x))
+            if self.layer_norm_style == "post":
+                x = self.ln_1(x + attn_out)
+                x = self.ln_2(x + self.mlp(x))
+            else:
+                x = x + attn_out
+                x = x + self.mlp(self.ln_2(x))
             return x, new_kv_cache
+        if self.layer_norm_style == "post":
+            x = self.ln_1(x + self.attn(x))
+            x = self.ln_2(x + self.mlp(x))
         else:
             x = x + self.attn(self.ln_1(x))
             x = x + self.mlp(self.ln_2(x))
-            return x
+        return x
 
 class GPT(nn.Module):
     def __init__(self, config: GPTConfig):
         super().__init__()
         self.config = config
 
-        self.transformer = nn.ModuleDict(dict(
+        transformer_layers = dict(
             wte = nn.Embedding(config.vocab_size, config.n_embd),
-            wpe = nn.Embedding(config.block_size, config.n_embd),
             drop = nn.Dropout(config.dropout),
             h = nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
             ln_f = nn.LayerNorm(config.n_embd),
-        ))
+        )
+        if config.use_position_embeddings:
+            transformer_layers["wpe"] = nn.Embedding(config.block_size, config.n_embd)
+        self.transformer = nn.ModuleDict(transformer_layers)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
         # Weight Tying
@@ -145,28 +160,28 @@ class GPT(nn.Module):
     def num_params(self) -> int:
         """Calculates unique trainable parameters (tied weights counted once)."""
         V, T, d, L = self.config.vocab_size, self.config.block_size, self.config.n_embd, self.config.n_layer
-        return V * d + T * d + L * (12 * (d ** 2) + 4 * d) + 2 * d
+        position_params = T * d if self.config.use_position_embeddings else 0
+        return V * d + position_params + L * (12 * (d ** 2) + 4 * d) + 2 * d
 
     def forward(self, idx, targets=None, kv_caches=None):
         device = idx.device
         B, T = idx.size()
-        
+        past_len = 0
         if kv_caches is None:
-            pos = torch.arange(0, T, dtype=torch.long, device=device)
-            tok_emb = self.transformer.wte(idx)
-            pos_emb = self.transformer.wpe(pos)
-            x = self.transformer.drop(tok_emb + pos_emb)
-
+            x = self.transformer.wte(idx)
+            if self.config.use_position_embeddings:
+                pos = torch.arange(T, dtype=torch.long, device=device)
+                x = x + self.transformer.wpe(pos)
+            x = self.transformer.drop(x)
             for block in self.transformer.h:
                 x = block(x)
         else:
-            # Inference with KV cache
             past_len = kv_caches[0][0].size(2) if kv_caches[0] is not None else 0
-            pos = torch.arange(past_len, past_len + T, dtype=torch.long, device=device)
-            tok_emb = self.transformer.wte(idx)
-            pos_emb = self.transformer.wpe(pos)
-            x = self.transformer.drop(tok_emb + pos_emb)
-
+            x = self.transformer.wte(idx)
+            if self.config.use_position_embeddings:
+                pos = torch.arange(past_len, past_len + T, dtype=torch.long, device=device)
+                x = x + self.transformer.wpe(pos)
+            x = self.transformer.drop(x)
             new_kv_caches = []
             for i, block in enumerate(self.transformer.h):
                 x, new_kv = block(x, kv_cache=kv_caches[i], use_cache=True)

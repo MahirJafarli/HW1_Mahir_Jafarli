@@ -109,6 +109,18 @@ def main():
     ablation = config_data.get("ablation", "none")
     warmup_steps = 137
 
+    ablation_settings = {
+        "none": (True, "pre"),
+        "no_position_embedding": (False, "pre"),
+        "post_layer_norm": (True, "post"),
+        "high_learning_rate": (True, "pre"),
+        "dropout_0": (True, "pre"),
+        "short_context": (True, "pre"),
+    }
+    if ablation not in ablation_settings:
+        raise ValueError(f"Unknown ablation: {ablation}")
+    use_position_embeddings, layer_norm_style = ablation_settings[ablation]
+
     if max_steps <= warmup_steps:
         raise ValueError("max_steps must be greater than the required 137-step warmup.")
     if eval_interval <= 0 or batch_size <= 0 or max_lr <= 0:
@@ -153,6 +165,8 @@ def main():
         n_head=n_head,
         n_embd=n_embd,
         dropout=dropout,
+        use_position_embeddings=use_position_embeddings,
+        layer_norm_style=layer_norm_style,
     )
     model = GPT(config).to(device)
     params = model.num_params()
