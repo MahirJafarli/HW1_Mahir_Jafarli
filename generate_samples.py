@@ -45,7 +45,10 @@ def main():
         )
         if len(sample_ids) - len(prompt_ids) != 120:
             raise RuntimeError("Generation did not return exactly 120 new tokens.")
-        samples.append(f"Sample {index} (run L, 120 new tokens):\n{tokenizer.decode(sample_ids)}")
+        samples.append(
+            f"Sample {index} (run L, 120 new tokens):\n"
+            f"{tokenizer.decode(sample_ids).rstrip()}"
+        )
 
     with open("samples.txt", "w", encoding="utf-8") as output_file:
         output_file.write("\n\n".join(samples) + "\n")

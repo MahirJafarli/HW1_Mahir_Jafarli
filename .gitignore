@@ -10,6 +10,8 @@ cache/
 checkpoints/
 input.txt
 figures/
+git_log.txt
+inference_benchmark.txt
 
 # OS generated files
 .DS_Store

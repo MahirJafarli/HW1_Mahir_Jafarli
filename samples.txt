@@ -1,0 +1,38 @@
+Sample 1 (run L, 120 new tokens):
+ROMEO:
+To do the strength and so blood,
+As by the holy way from my bloody sheet,
+From revenge in their arms thyself dial birth,
+And strike unjustly priseth in rest,
+While may prevail as woul their cheek woes,
+And infull of this frumer deep jewel to death.
+And what hast thou sentence to him?
+
+JULIET:
+Giving
+
+Sample 2 (run L, 120 new tokens):
+ROMEO:
+One what I shall have it been against night, how ond got!
+Thy gentleman, hour, that will draw thy souls.
+
+ROMEO:
+I would be more in our lady; which a sew
+Is she simple hold, and be more man in that house
+As many loss more than the noonest honest side.
+
+ROMEO:
+Alack! how! all a slave-night.
+
+CAPULET:
+Mon
+
+Sample 3 (run L, 120 new tokens):
+ROMEO:
+Thou art a suddden she married Thursin happy hands;
+And then, what hand men have such secret, and hopest thee,
+And when he was, and hangs in the gates of it,
+Of spotting crown lands and ruin's thrones
+Do prove neather than we be born play.
+With such few good haze of sun,
+Draw'd the chog

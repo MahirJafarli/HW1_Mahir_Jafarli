@@ -154,10 +154,10 @@ def main():
         )
         y = add_paragraph(
             fig,
-            "R1. The most consequential debugging issue was KV-cache prefill: cached generation failed on its "
-            "first call because an empty cache was treated like ordinary attention and did not return the "
-            "cache tuple expected by GPT.forward. The cached/uncached greedy comparison exposed it; commit "
-            "1986095 added an explicit cache-use path and fixed initialization.",
+            "R1. The most time-consuming inference bug was KV-cache prefill: the first cached call passed an "
+            "empty cache list, but blocks treated None entries like ordinary attention and returned only hidden "
+            "states instead of the cache tuple expected by GPT.forward. Comparing cached and uncached greedy "
+            "generation exposed the mismatch. Commit 1986095 added an explicit cache-use path and fixed initialization.",
             y,
         )
         y = add_paragraph(
@@ -188,8 +188,9 @@ def main():
         )
         y = add_paragraph(
             fig,
-            f"R5. The first ten learned byte merges, in order, are: {', '.join(repr(item) for item in first_merges)}. "
-            f"The tokenizer represents the holdout shard at {bytes_per_token:.4f} UTF-8 bytes per token. "
+            f"R5. For the tokenizer used by run L, the first ten learned byte merges, in order, are: "
+            f"{', '.join(repr(item) for item in first_merges)}. The tokenizer represents the holdout shard "
+            f"at {bytes_per_token:.4f} UTF-8 bytes per token. "
             "Common short English letter pairs and a frequent trailing space appear early because BPE repeatedly "
             "merges frequent adjacent byte-token pairs; corpus word and punctuation frequencies shape the order.",
             y,

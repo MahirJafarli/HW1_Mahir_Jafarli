@@ -1,14 +1,12 @@
 # AI Disclosure Statement
 
-I used Gemini and GitHub Copilot (Copilot SDK in VS Code) as technical assistants. I reviewed the changes and will verify that I can explain the submitted code.
+I used Gemini and GitHub Copilot (Copilot SDK in VS Code) as technical assistants. I reviewed the generated and revised work and used the Colab results to evaluate the experiments.
 
-## Assistance by part
+- **A - code generation:** AI helped with tokenizer implementation and tie-breaking review. I trained the tokenizer on the training text and used its saved merges to encode and decode the corpus.
+- **B - code review:** AI reviewed the model interface, architecture, and parameter-count calculation. I ran the model training configurations and checked the reported parameter counts against the experiment records.
+- **C - code generation:** AI helped revise the training CLI, token-ID cache, schedule, and baseline. I ran the eight GPT experiments and baseline in Colab and retained their logs and run records.
+- **D - code generation:** AI helped implement autoregressive generation, sampling filters, and KV caching. I used the run L checkpoint to generate the required samples and reviewed the output.
+- **E - code generation:** AI helped add experiment configurations, ablations, and plotting code. I ran the configurations in Colab and used their logs to compare the measured results.
+- **F - code generation:** AI helped organize the report requirements and draft evidence-based reflections. I checked the report's numbers against my own CSV results and will revise any reflection I cannot explain before submission.
 
-- **A - code generation:** Copilot helped resolve the tokenizer's tie-breaking behavior. I will check it against the tokenizer tests and review the implementation.
-- **B - code review:** Copilot identified the required attention class name and grader marker. I will verify the model architecture and parameter count.
-- **C - code generation:** Copilot helped revise the training CLI, token-ID cache, schedule, and baseline. I will run the pipeline and inspect its logs.
-- **D - code generation:** Copilot helped implement autoregressive generation with sampling filters and a KV cache. I will test cached and uncached generation and review the implementation.
-- **E - code generation:** Copilot helped add experiment configs, positional-embedding and layer-norm ablations, and plotting code. I will run the experiments, inspect the logs, and explain the comparisons myself.
-- **F - concepts:** Copilot helped identify the report and disclosure requirements. I will write the final reflections using my own run results and commit history.
-
-Gemini was also used for earlier debugging, architecture guidance, and documentation assistance. I will update this disclosure if I use additional AI assistance for the experiments or report.
+Gemini was also used during earlier development for debugging, architecture guidance, and documentation assistance. AI assistance is disclosed here; I am responsible for understanding and explaining the submitted work.

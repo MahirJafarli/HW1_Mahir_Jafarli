@@ -53,7 +53,7 @@ def main():
     plt.xscale("log")
     plt.xlabel("Unique trainable parameters (log scale)")
     plt.ylabel("Best holdout-shard loss (nats/token)")
-    plt.title("Scaling: model size versus best validation loss")
+    plt.title("Scaling: model size versus best holdout-shard loss")
     plt.grid(True, alpha=0.25)
     plt.tight_layout()
     plt.savefig(os.path.join("figures", "scaling_validation_loss.png"), dpi=200)
