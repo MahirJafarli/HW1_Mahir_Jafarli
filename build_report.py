@@ -123,9 +123,9 @@ def main():
         cache_speedup = args.cached_tokens_per_second / args.uncached_tokens_per_second
         fig.text(
             0.08, 0.420,
-            f"Greedy generation for 120 new tokens: {args.cached_tokens_per_second:.1f} tokens/s cached, "
-            f"{args.uncached_tokens_per_second:.1f} tokens/s uncached "
-            f"({cache_speedup:.2f}x speed-up) on {args.inference_device}.",
+            f"120-token M generation: {args.cached_tokens_per_second:.1f} cached vs "
+            f"{args.uncached_tokens_per_second:.1f} uncached tokens/s ({cache_speedup:.2f}x; "
+            f"{args.inference_device}; logs/inference_benchmark.txt).",
             fontsize=9, va="top",
         )
         curve = plt.imread("figures/validation_loss_curves.png")
