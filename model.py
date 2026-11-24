@@ -193,8 +193,7 @@ class GPT(nn.Module):
             logits = self.lm_head(x)
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
         else:
-            # Inference optimization: compute logits for the last position only
-            logits = self.lm_head(x[:, [-1], :])
+            logits = self.lm_head(x)
             loss = None
 
         if kv_caches is not None:

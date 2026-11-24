@@ -33,6 +33,8 @@ two experiment figures with:
 ```bash
 for run in S L A1 A2 A3 A4 A5; do python train.py --config "configs/${run}.json"; done
 python plot_experiments.py
+python generate_samples.py
+python benchmark_generation.py
 ```
 
 Dataset, cache, and checkpoints are generated/local files and are not part of
